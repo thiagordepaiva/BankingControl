@@ -1,0 +1,24 @@
+
+####### SERVER #######
+server:
+  port: 8080
+
+####### SPRING #######
+spring:
+  application:
+    name: BankingControl
+  thymeleaf:
+    cache: false
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/controlebancario
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect

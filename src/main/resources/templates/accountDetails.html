@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Detalhes da Conta</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <style>
+      .profile-container {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          margin-top: 20px;
+          gap: 15px;
+      }
+
+      .profile-info {
+          text-align: left;
+          font-size: 16px;
+          color: #333;
+      }
+
+      .logout-btn {
+          font-size: 16px;
+          color: #d9534f;
+          text-decoration: none;
+      }
+
+      .form-container {
+          margin-top: 20px;
+          max-width: 400px;
+          margin: 0 auto;
+          padding: 20px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          background-color: #f9f9f9;
+          display: none;
+      }
+
+      .action-buttons {
+          margin-top: 20px;
+          display: flex;
+          justify-content: flex-start;
+          gap: 10px;
+      }
+
+      .transaction-grid {
+          margin-top: 30px;
+          max-width: 80%;
+          margin: 0 auto;
+      }
+
+      .transaction-row {
+          display: flex;
+          align-items: center;
+          font-size: 14px;
+          padding: 8px 0;
+          border-bottom: 1px solid #eaeaea;
+      }
+
+      .transaction-icon {
+          width: 20px;
+          margin-right: 10px;
+          text-align: center;
+      }
+
+      .transaction-type {
+          flex: 1;
+          text-align: justify;
+          margin-right: 10px;
+      }
+
+      .transaction-amount {
+          width: 120px;
+          text-align: right;
+          font-weight: bold;
+          color: #333;
+      }
+
+      .deposit, .transfer-in {
+          color: green;
+      }
+
+      .withdrawal, .transfer-out {
+          color: red;
+      }
+
+      .saldo {
+          margin-top: 18px;
+          font-size: 1.2rem;
+          font-weight: bold;
+          text-align: right;
+      }
+
+      .saldo strong {
+          font-size: 1.5rem;
+          color: #333;
+      }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="profile-container">
+    <div class="profile-info">
+      <span>Usuário: <strong th:text="${account.username}"></strong></span><br>
+      <span>Conta: <strong th:text="${account.id}"></strong></span>
+    </div>
+    <a href="/login" class="logout-btn">
+      <i class="fas fa-sign-out-alt"></i> Sair da Conta
+    </a>
+  </div>
+
+  <div class="action-buttons">
+    <button class="btn btn-success" onclick="toggleForm('depositForm')">
+      <i class="fas fa-plus-circle"></i> Depositar
+    </button>
+    <button class="btn btn-warning" onclick="toggleForm('withdrawForm')">
+      <i class="fas fa-minus-circle"></i> Sacar
+    </button>
+    <button class="btn btn-info" onclick="toggleForm('transferForm')">
+      <i class="fas fa-exchange-alt"></i> Transferir
+    </button>
+  </div>
+
+  <div id="depositForm" class="form-container">
+    <h5>Depositar</h5>
+    <form action="/deposit" method="post" th:object="${transaction}">
+      <div class="form-group">
+        <label for="depositAmount">Valor</label>
+        <input type="number" class="form-control" id="depositAmount" name="amount" step="0.01" min="0" required/>
+        <input type="hidden" name="typeTransaction" value="DEPOSIT"/>
+        <input type="hidden" name="fromAccountId" th:value="${account.id}"/>
+      </div>
+      <button type="submit" class="btn btn-success">Depositar</button>
+    </form>
+  </div>
+
+  <div id="withdrawForm" class="form-container">
+    <h5>Sacar</h5>
+    <form action="/withdraw" method="post" th:object="${transaction}">
+      <div class="form-group">
+        <label for="withdrawAmount">Valor</label>
+        <input type="number" class="form-control" id="withdrawAmount" name="amount" step="0.01" min="0" required/>
+        <input type="hidden" name="typeTransaction" value="WITHDRAWAL"/>
+        <input type="hidden" name="fromAccountId" th:value="${account.id}"/>
+      </div>
+      <button type="submit" class="btn btn-warning">Sacar</button>
+    </form>
+  </div>
+
+  <div id="transferForm" class="form-container">
+    <h5>Transferir</h5>
+    <form action="/transfer" method="post" th:object="${transaction}">
+      <div class="form-group">
+        <label for="toAccountId">Número da Conta Destino</label>
+        <input type="number" class="form-control" id="toAccountId" name="toAccountId" step="1" min="1" required/>
+        <input type="hidden" name="typeTransaction" value="TRANSFER"/>
+        <input type="hidden" name="fromAccountId" th:value="${account.id}"/>
+      </div>
+      <div class="form-group">
+        <label for="transferAmount">Valor</label>
+        <input type="number" class="form-control" id="transferAmount" name="amount" step="0.01" min="0" required/>
+      </div>
+      <button type="submit" class="btn btn-info">Transferir</button>
+    </form>
+  </div>
+
+  <div th:if="${error}">
+    <p class="mt-3 alert alert-danger" th:text="${error}"></p>
+  </div>
+
+  <div class="transaction-grid">
+    <h4>Extrato Bancário</h4>
+    <div class="transaction-list">
+      <div th:each="transaction : ${transactions}" class="transaction-row"
+           th:class="${transaction.typeTransaction == 'DEPOSIT' || transaction.toAccountId == account.id ? 'deposit' : 'withdrawal'}">
+        <span class="transaction-icon">
+          <i th:class="${transaction.typeTransaction == 'DEPOSIT' || transaction.toAccountId == account.id ? 'fas fa-plus-circle' : 'fas fa-minus-circle'}"></i>
+        </span>
+        <span class="transaction-item"
+              th:text="${#dates.format(transaction.transactionDate, 'dd/MM/yyyy HH:mm')}"></span>
+        <span class="transaction-type"
+              th:text="${transaction.typeTransaction == 'DEPOSIT' ? 'Deposito' : (transaction.typeTransaction == 'WITHDRAWAL' ? 'Saque' : (transaction.toAccountId == account.id ? 'Transferencia recebida da conta ' + transaction.fromAccountId : 'Transferencia enviada a conta ' + transaction.toAccountId))}"></span>
+        <span class="transaction-amount"
+              th:text="${'R$' + transaction.amount.toString()}"></span>
+      </div>
+    </div>
+
+    <div class="saldo">
+      <h5>Saldo Atual: <strong th:text="${'R$' + account.balance.toString()}"></strong></h5>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+<script>
+    function toggleForm(formId) {
+        const form = document.getElementById(formId);
+        const isCurrentlyVisible = form.style.display === 'block';
+        document.querySelectorAll('.form-container').forEach(container => {
+            container.style.display = 'none';
+        });
+        form.style.display = isCurrentlyVisible ? 'none' : 'block';
+    }
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.5/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
