@@ -73,7 +73,6 @@
           width: 120px;
           text-align: right;
           font-weight: bold;
-          color: #333;
       }
 
       .deposit, .transfer-in {
@@ -170,20 +169,28 @@
 
   <div class="transaction-grid">
     <h4>Extrato Bancário</h4>
-    <div class="transaction-list">
-      <div th:each="transaction : ${transactions}" class="transaction-row"
-           th:class="${transaction.typeTransaction == 'DEPOSIT' || transaction.toAccountId == account.id ? 'deposit' : 'withdrawal'}">
-        <span class="transaction-icon">
-          <i th:class="${transaction.typeTransaction == 'DEPOSIT' || transaction.toAccountId == account.id ? 'fas fa-plus-circle' : 'fas fa-minus-circle'}"></i>
-        </span>
-        <span class="transaction-item"
-              th:text="${#dates.format(transaction.transactionDate, 'dd/MM/yyyy HH:mm')}"></span>
-        <span class="transaction-type"
-              th:text="${transaction.typeTransaction == 'DEPOSIT' ? 'Deposito' : (transaction.typeTransaction == 'WITHDRAWAL' ? 'Saque' : (transaction.toAccountId == account.id ? 'Transferencia recebida da conta ' + transaction.fromAccountId : 'Transferencia enviada a conta ' + transaction.toAccountId))}"></span>
-        <span class="transaction-amount"
-              th:text="${'R$' + transaction.amount.toString()}"></span>
-      </div>
-    </div>
+    <table style="width: 100%; text-align: center;">
+      <tr th:each="transaction : ${transactions}"
+          th:class="${transaction.typeTransaction == 'DEPOSIT' || transaction.toAccountId == account.id ? 'deposit' : 'withdrawal'}">
+        <td>
+          <span class="transaction-icon">
+            <i th:class="${transaction.typeTransaction == 'DEPOSIT' || transaction.toAccountId == account.id ? 'fas fa-plus-circle' : 'fas fa-minus-circle'}"></i>
+          </span>
+        </td>
+        <td>
+          <span class="transaction-item"
+                th:text="${#dates.format(transaction.transactionDate, 'dd/MM/yyyy HH:mm')}"></span>
+        </td>
+        <td>
+          <span class="transaction-type"
+                th:text="${transaction.typeTransaction == 'DEPOSIT' ? 'Deposito' : (transaction.typeTransaction == 'WITHDRAWAL' ? 'Saque' : (transaction.toAccountId == account.id ? 'Transferencia recebida da conta ' + transaction.fromAccountId : 'Transferencia enviada a conta ' + transaction.toAccountId))}"></span>
+        </td>
+        <td>
+          <span class="transaction-amount"
+                th:text="${'R$' + transaction.amount.toString()}"></span>
+        </td>
+      </tr>
+    </table>
 
     <div class="saldo">
       <h5>Saldo Atual: <strong th:text="${'R$' + account.balance.toString()}"></strong></h5>

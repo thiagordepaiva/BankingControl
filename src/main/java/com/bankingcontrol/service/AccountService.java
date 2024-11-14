@@ -5,6 +5,7 @@ import com.bankingcontrol.model.Transaction;
 import com.bankingcontrol.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
@@ -28,13 +29,26 @@ public class AccountService {
     }
 
     public Account getAccount(Long id) {
-        Account account = accountRepository.findById(id).orElse(null);
+        return accountRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
+    }
 
-        if (account == null) {
-            throw new IllegalArgumentException("Conta não encontrada");
+    public Account createAccount(Account account, Model model) {
+        if (this.findAccountByUsername(account.getUsername())) {
+            model.addAttribute("error", "Já existe uma conta para o usuário informado.");
+            model.addAttribute("account", account);
+
+            return null;
         }
 
-        return account;
+        if (!account.getPassword().equals(account.getConfirmPassword())) {
+            model.addAttribute("error", "As senhas não coincidem.");
+            model.addAttribute("account", account);
+
+            return null;
+        }
+
+        return this.save(account);
     }
 
     @Transactional
@@ -67,6 +81,10 @@ public class AccountService {
 
     @Transactional
     public Account transfer(Transaction transaction) {
+        if (transaction.getFromAccountId().equals(transaction.getToAccountId())) {
+            throw new IllegalArgumentException("Conta de origem e destino devem ser diferentes");
+        }
+
         Account fromAccount = this.getAccount(transaction.getFromAccountId());
         Account toAccount = this.getAccount(transaction.getToAccountId());
 
@@ -88,7 +106,7 @@ public class AccountService {
 
     private static void isSufficientBalanceForDebit(Transaction transaction, Account account) {
         if (account.getBalance().compareTo(transaction.getAmount()) < 0) {
-            throw new IllegalArgumentException("Saldo insuficiente");
+            throw new IllegalArgumentException("O seu saldo é insuficiente para realizar essa operação");
         }
     }
 

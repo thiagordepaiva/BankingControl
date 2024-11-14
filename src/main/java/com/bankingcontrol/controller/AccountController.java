@@ -61,21 +61,8 @@ public class AccountController {
             return "createAccount";
         }
 
-        if (accountService.findAccountByUsername(account.getUsername())) {
-            model.addAttribute("error", "Já existe uma conta para o usuário informado.");
-            model.addAttribute("account", account);
-
-            return "createAccount";
-        }
-
-        if (!account.getPassword().equals(account.getConfirmPassword())) {
-            model.addAttribute("error", "As senhas não coincidem.");
-            model.addAttribute("account", account);
-
-            return "createAccount";
-        }
-
-        accountService.save(account);
+        account = accountService.createAccount(account, model);
+        if (account == null) return "createAccount";
 
         model.addAttribute("accountNumber", account.getId());
 
